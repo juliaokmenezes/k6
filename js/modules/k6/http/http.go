@@ -69,12 +69,18 @@ func (r *RootModule) NewModuleInstance(vu modules.VU) modules.Instance {
 	// wrappers (facades) that convert the old k6 idiosyncratic APIs to the new
 	// proper Client ones that accept Request objects and don't suck
 	mustExport("get", func(url goja.Value, args ...goja.Value) (*Response, error) {
+		if checkQuantityParameter(args...) {
+			vu.State().Logger.Warningf("GET method has more than two arguments")
+		}
 		// http.get(url, params) doesn't have a body argument, so we add undefined
 		// as the third argument to http.request(method, url, body, params)
 		args = append([]goja.Value{goja.Undefined()}, args...)
 		return mi.defaultClient.Request(http.MethodGet, url, args...)
 	})
 	mustExport("head", func(url goja.Value, args ...goja.Value) (*Response, error) {
+		if checkQuantityParameter(args...) {
+			vu.State().Logger.Warningf("Head method has more than two arguments")
+		}
 		// http.head(url, params) doesn't have a body argument, so we add undefined
 		// as the third argument to http.request(method, url, body, params)
 		args = append([]goja.Value{goja.Undefined()}, args...)
@@ -180,4 +186,13 @@ func (mi *ModuleInstance) URL(parts []string, pieces ...string) (httpext.URL, er
 type Client struct {
 	moduleInstance   *ModuleInstance
 	responseCallback func(int) bool
+}
+
+func checkQuantityParameter(args ...goja.Value) bool {
+	for i := range args {
+		if i >= 1 {
+			return true
+		}
+	}
+	return false
 }
