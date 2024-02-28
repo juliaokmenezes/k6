@@ -185,7 +185,7 @@ type Client struct {
 }
 
 func checkParameterListSize(methodType string, vu modules.VU, args ...goja.Value){
-	if len(args) > 1{
+	if len(args) > 1 {
 		vu.State().Logger.Warningf("%s method has more than two arguments", methodType)
 	}
 }
